@@ -4,10 +4,11 @@ import pygame.midi
 import time
 
 pygame.midi.init()
-player = pygame.midi.Output(2)
+player = pygame.midi.Output(0)
 player.set_instrument(48, 1)
 
 major=[0,4,7,12]
+major=[0,3,7,12]
 
 def go(note):
     player.note_on(note, 127,1)
