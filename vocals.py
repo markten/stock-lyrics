@@ -1,8 +1,12 @@
+import os
 from tswift import Artist
 import random
 import csv
-from gtts import gTTS
+import wave
+import subprocess
 from fuzzywuzzy import fuzz
+
+TIME_FILE = 'timefile.txt'
 
 def fetch_lyrics(artist_name):
 	
@@ -12,7 +16,7 @@ def fetch_lyrics(artist_name):
 	song.load()
 	print song.lyrics
 	
-	return song.lyrics.split()
+	return song.lyrics.split('\n')
 	
 def load_symbols(symbol_file):
 	
@@ -48,6 +52,7 @@ def match_symbol(word, symbols):
 	if max_index:
 		return symbols[max_index]
 	else:
+		print "BAD: [" + word +"]"
 		return ''
 			
 	
@@ -58,16 +63,56 @@ def generate_symbol_lyrics(artist):
 	
 	symbol_lyrics = ''
 	
-	for word in lyrics:
-		symbol_lyrics = symbol_lyrics + ' ' + match_symbol(word, symbols)
+	for line in lyrics:
+		words = line.split()
+		
+		for word in words:
+			
+			symbol = match_symbol(word, symbols)
+			
+			if word:
+				symbol_lyrics = symbol_lyrics + ' ' + symbol
+		
+		symbol_lyrics += '\n'
 		
 	print symbol_lyrics
 		
 	return symbol_lyrics
-	
-def generate_vocals_file(artist):
+
+def generate_vocal_files(artist):
 	
 	symbol_lyrics = generate_symbol_lyrics(artist)
-	tts = gTTS(text=symbol_lyrics, lang='en')
-	tts.save("test.mp3")
+	
+	total_time = 0
+	
+	audio_file = wave.open('audiofile.wav', 'w')
+	
+	for index, word in enumerate(symbol_lyrics.split()):
+		
+		# Generate wav files for each word
+		filename = str(index)+'.wav'
+		subprocess.call(['espeak', '-w', filename, word])
+		
+		with open(TIME_FILE, 'a') as time_file:
+			time_file.writelines(str(total_time))
+		
+		# Find length in seconds of each word and append sound data to output file
+		wav_file = wave.open(filename, 'r')
+		num_frames = wav_file.getnframes()
+		fs = wav_file.getframerate()
+		word_time = num_frames / float(fs)
+		
+		if index == 0:
+			audio_file.setparams(wav_file.getparams())
+		audio_file.writeframes(wav_file.readframes(num_frames))
+		
+		os.remove(filename)
+		
+		total_time += word_time
+		
+	audio_file.close()
+			
+			
+		
+		
 	

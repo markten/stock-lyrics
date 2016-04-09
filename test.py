@@ -1,2 +1,3 @@
 import vocals
-test = vocals.generate_vocals_file('the-killers')
+import sys
+test = vocals.generate_vocal_files(sys.argv[1])
