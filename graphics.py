@@ -26,7 +26,7 @@ class TickerView(object):
         self.original_lyric_graphics = self.generate_lyric_graphics(original_lyrics, WORD_SPACING, color.ORANGE)
         self.symbol_lyric_graphics = self.generate_lyric_graphics(symbol_lyrics, WORD_SPACING, color.GREEN)
 
-        self.heading_text = self.font['medium'].render(song_artist.title() + ' -- ' + song_title.replace('-', ' ').title(), True, color.WHITE)
+        self.heading_text = self.font['medium'].render(song_artist.replace('-', ' ').title() + ' -- ' + song_title.replace('-', ' ').title(), True, color.WHITE)
         self.heading_offset = int(self.font['medium'].size(song_artist + ' -- ' + song_title)[X]/2)
         self.help_text = self.font['medium'].render('Press q to exit.', True, color.WHITE)
 
