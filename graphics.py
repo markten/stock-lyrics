@@ -1,41 +1,36 @@
 import pygame
 import color
+from random import randrange
 
 TITLE = "Stock Lyrics"
-WINDOW_SIZE_X = 800
-WINDOW_SIZE_Y = 600
-WORD_SPACING = 400
-SCROLL_SPEED = 5
+WORD_SPACING = 500
+BAR_HEIGHT = 100
+SCROLL_SPEED = 10
+X = 0
+Y = 1
 
 class TickerView(object):
 
-    def __init__(self, original_lyrics, symbol_lyrics):
+    def __init__(self, original_lyrics, symbol_lyrics, song_title, song_artist):
         pygame.init()
-        self.screen_size = (WINDOW_SIZE_X, WINDOW_SIZE_Y)
+        display_info = pygame.display.Info()
+        self.screen_size = (display_info.current_w, display_info.current_h)
         self.screen = pygame.display.set_mode(self.screen_size, pygame.FULLSCREEN)
         pygame.display.set_caption(TITLE)
         self.screen.fill(color.BLACK)
-        self.font = pygame.font.Font("nokiafc22.ttf", 60)
+
         self.clock = pygame.time.Clock()
 
-        self.text_position = WINDOW_SIZE_X
+        self.font = self.load_fonts()
+        self.led_mask = self.generate_led_mask()
+        self.original_lyric_graphics = self.generate_lyric_graphics(original_lyrics, WORD_SPACING, color.ORANGE)
+        self.symbol_lyric_graphics = self.generate_lyric_graphics(symbol_lyrics, WORD_SPACING, color.GREEN)
 
-        self.original_lyric_graphics, self.symbol_lyric_graphics = self.generate_lyric_graphics(original_lyrics, symbol_lyrics, WORD_SPACING)
+        self.heading_text = self.font['medium'].render(song_artist.title() + ' -- ' + song_title.replace('-', ' ').title(), True, color.WHITE)
+        self.heading_offset = int(self.font['medium'].size(song_artist + ' -- ' + song_title)[X]/2)
+        self.help_text = self.font['medium'].render('Press q to exit.', True, color.WHITE)
 
         self.running = True
-
-        # make LED mask
-        self.led_mask1 = pygame.Surface((WINDOW_SIZE_X, 100), pygame.SRCALPHA)
-
-        for x in range(5, 600, 5):
-            for y in range(5, 100, 5):
-                pygame.draw.circle(self.led_mask1, color.WHITE, [x,y], 2)
-
-        self.led_mask2 = pygame.Surface((WINDOW_SIZE_X, 100), pygame.SRCALPHA)
-
-        for x in range(5, 600, 5):
-            for y in range(5, 350, 5):
-                pygame.draw.circle(self.led_mask2, color.WHITE, [x,y], 2)
 
     def run(self):
 
@@ -61,67 +56,76 @@ class TickerView(object):
         self.screen.fill(color.DARK_BLUE)
 
         # Draw upper ticker
-        pygame.draw.rect(self.screen, color.BLACK, [0, 150, WINDOW_SIZE_X, 100])
-        pygame.draw.line(self.screen, color.DARK_GRAY, [ 0, 150], [ WINDOW_SIZE_X, 150], 3)
-        pygame.draw.line(self.screen, color.DARK_GRAY, [ 0, 150+100], [ WINDOW_SIZE_X, 150+100], 3)
+        pygame.draw.rect(self.screen, color.BLACK,[0, int(0.2*self.screen_size[Y]),
+                          self.screen_size[X], BAR_HEIGHT])
+        pygame.draw.line(self.screen, color.DARK_GRAY, [ 0, int(0.2*self.screen_size[Y])],
+                         [self.screen_size[X], int(0.2*self.screen_size[Y])], 3)
+        pygame.draw.line(self.screen, color.DARK_GRAY,[ 0, int(0.2*self.screen_size[Y])+BAR_HEIGHT],
+                         [self.screen_size[X], int(0.2*self.screen_size[Y])+BAR_HEIGHT], 3)
 
         # Draw lower ticker
-        pygame.draw.rect(self.screen, color.BLACK, [0, 350, WINDOW_SIZE_X, 100])
-        pygame.draw.line(self.screen, color.DARK_GRAY, [ 0, 350], [ WINDOW_SIZE_X, 350], 3)
-        pygame.draw.line(self.screen, color.DARK_GRAY, [ 0, 350+100], [ WINDOW_SIZE_X, 350+100], 3)
+        pygame.draw.rect(self.screen, color.BLACK,
+                         [0, int(0.8*self.screen_size[Y])-BAR_HEIGHT,self.screen_size[X], BAR_HEIGHT])
+        pygame.draw.line(self.screen, color.DARK_GRAY, [ 0, int(0.8*self.screen_size[Y])-BAR_HEIGHT],
+                         [self.screen_size[X], int(0.8*self.screen_size[Y])-BAR_HEIGHT], 3)
+        pygame.draw.line(self.screen, color.DARK_GRAY, [ 0, int(0.8*self.screen_size[Y])],
+                         [self.screen_size[X], int(0.8*self.screen_size[Y])], 3)
 
         # Draw scrolling text
-        for index, lyric in enumerate(self.original_lyric_graphics):
-            if index < 4:
-                masked = lyric.font_object.copy()
-                masked.blit(self.led_mask1, [0,0], None, pygame.BLEND_RGBA_MULT)
-                self.screen.blit(masked, [lyric.x_position, 150+20])
-            lyric.x_position -= SCROLL_SPEED
-            if lyric.x_position < -WORD_SPACING:
-                self.original_lyric_graphics.remove(lyric)
-
-        for index, lyric in enumerate(self.symbol_lyric_graphics):
-            if index < 4:
-                masked = lyric.font_object.copy()
-                masked.blit(self.led_mask2, [0,0], None, pygame.BLEND_RGBA_MULT)
-                self.screen.blit(masked, [lyric.x_position+150, 350+20])
-            lyric.x_position -= SCROLL_SPEED
-            if lyric.x_position < -WORD_SPACING:
-                self.symbol_lyric_graphics.remove(lyric)
+        self.draw_lyric(self.original_lyric_graphics, int(0.2*self.screen_size[Y])+20)
+        self.draw_lyric(self.symbol_lyric_graphics, int(0.8*self.screen_size[Y])-80)
 
         # Print artist name and title
+        self.screen.blit(self.heading_text, [int(self.screen_size[X]/2) - self.heading_offset, 10])
 
+        # print exit help
+        self.screen.blit(self.help_text, [10, self.screen_size[Y]-30])
 
         pygame.display.flip()
 
-    def generate_lyric_graphics(self, original_lyrics, symbol_lyrics, word_spacing):
-        original_lyric_graphics = []
-        symbol_lyric_graphics = []
+    def draw_lyric(self, lyric_graphics, y_offset):
+        for index, lyric in enumerate(lyric_graphics):
+            if index < 5:
+                self.screen.blit(lyric.font_object, [lyric.x_position, y_offset])
+            lyric.x_position -= SCROLL_SPEED
+            if lyric.x_position < -WORD_SPACING:
+                lyric_graphics.remove(lyric)
+
+    def generate_lyric_graphics(self, lyrics, word_spacing, text_color):
+        lyric_graphics = []
 
         total_length = 0
 
-        for word in original_lyrics.split():
-            new_font_object = self.font.render(word, True, color.ORANGE)
-            new_lyric_graphic = LyricGraphic(total_length, new_font_object)
-            original_lyric_graphics.append(new_lyric_graphic)
+        for word in lyrics.split():
+            new_font_object = self.font['large'].render(word, True, text_color)
+            new_font_object.blit(self.led_mask, [0,0], None, pygame.BLEND_RGBA_MULT)
+            new_lyric_graphic = LyricGraphic(total_length + randrange(0, 100), new_font_object)
+            lyric_graphics.append(new_lyric_graphic)
             new_font_object = None
 
             total_length += word_spacing
-            print total_length
 
         total_length = 0
 
-        for word in symbol_lyrics.split():
-            new_font_object = self.font.render(word, True, color.GREEN)
-            new_lyric_graphic = LyricGraphic(total_length, new_font_object)
-            symbol_lyric_graphics.append(new_lyric_graphic)
-            new_font_object = None
+        return lyric_graphics
 
-            total_length += word_spacing
-            print total_length
+    def generate_led_mask(self):
+        led_mask = pygame.Surface((self.screen_size[X], 100), pygame.SRCALPHA)
 
-        return original_lyric_graphics, symbol_lyric_graphics
+        for x in range(5, 600, 5):
+            for y in range(5, 100, 5):
+                pygame.draw.circle(led_mask, color.WHITE, [x,y], 2)
 
+        return led_mask
+
+    def load_fonts(self):
+        font = {
+            'large': pygame.font.Font("nokiafc22.ttf", 60),
+            'medium': pygame.font.Font("nokiafc22.ttf", 24),
+            'small': pygame.font.Font("nokiafc22.ttf", 12)
+        }
+
+        return font
 
 class LyricGraphic(object):
 
