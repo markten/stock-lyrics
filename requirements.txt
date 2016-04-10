@@ -1,0 +1,3 @@
+fuzzywuzzy == 0.10.0
+tswift == 0.1.0
+pygame == 1.8.1
