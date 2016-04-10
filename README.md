@@ -15,3 +15,16 @@ If you have pip installed, you may install the required modules with
 ```
 
 Pygame will likely require that you seek out a binary or refer to your distribution's package manager.
+
+## Usage
+
+Simply run the script with python. Supply and artist name in all lowercase letters with hyphens in place of spaces.
+
+```python
+python ./stock-lyrics.py <artist-name>
+```
+
+To run a test case for the graphics that doesn't pull lyrics.
+```python
+python ./stock-lyrics.py -t
+```
