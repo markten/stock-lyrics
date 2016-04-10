@@ -3,6 +3,8 @@ This program makes a simple ticker display of song lyrics. The original lyrics a
 
 This program was created during Bitcamp 2016 at UMD.
 
+![screenshot](http://i.imgur.com/ReNNTkS.png)
+
 ## Requirements
 This program runs with Python 2.7
 

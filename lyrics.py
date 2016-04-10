@@ -1,4 +1,4 @@
-import os, string
+import os, sys, string
 from tswift import Artist
 import random
 import csv
@@ -16,6 +16,7 @@ def fetch_artist_song(artist_name):
 		return song._title, artist_name, song.lyrics
 	except:
 		print "Unable to find artist. Please enter artist name in lowercase with hyphens to denote spaces."
+		sys.exit(1)
 
 def load_symbols(symbol_file):
 
