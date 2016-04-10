@@ -2,12 +2,8 @@ import os
 from tswift import Artist
 import random
 import csv
-import wave
-import subprocess
 from fuzzywuzzy import fuzz
 
-TIME_FILE = 'timefile.txt'
-ESPEAK = 'C:\Program Files (x86)\eSpeak\command_line\espeak.exe'
 SYMBOL_FILE = './symbols.csv'
 
 def fetch_lyrics(artist_name):
@@ -102,37 +98,3 @@ def get_lyric_strings(artist):
 		symbol_lyrics_flat += (word + ' ')
 
 	return original_lyrics_flat, symbol_lyrics_flat
-
-def generate_vocal_files(artist):
-
-	symbol_lyrics = generate_symbol_lyrics(artist)
-
-	total_time = 0
-
-	audio_file = wave.open('audiofile', 'w')
-
-	for index, word in enumerate(symbol_lyrics.split()):
-
-		# Generate wav files for each word
-		filename = str(index)+'.wav'
-		subprocess.call([ESPEAK, '-w', filename, word])
-
-		with open(TIME_FILE, 'a') as time_file:
-			time_file.writelines(str(total_time))
-
-		# Find length in seconds of each word and append sound data to output file
-		wav_file = wave.open(filename, 'r')
-		num_frames = wav_file.getnframes()
-		fs = wav_file.getframerate()
-		word_time = num_frames / float(fs)
-
-		if index == 0:
-			audio_file.setparams(wav_file.getparams())
-		audio_file.writeframes(wav_file.readframes(num_frames))
-
-		wav_file.close()
-		os.remove(filename)
-
-		total_time += word_time
-
-	audio_file.close()

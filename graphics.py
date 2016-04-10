@@ -1,7 +1,7 @@
 import pygame
 import color
 
-TITLE = "Stock Symphony"
+TITLE = "Stock Lyrics"
 WINDOW_SIZE_X = 800
 WINDOW_SIZE_Y = 600
 WORD_SPACING = 400
@@ -90,7 +90,7 @@ class TickerView(object):
                 self.symbol_lyric_graphics.remove(lyric)
 
         # Print artist name and title
-        
+
 
         pygame.display.flip()
 
